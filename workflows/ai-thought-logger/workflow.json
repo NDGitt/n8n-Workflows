@@ -1,0 +1,741 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -928,
+        -480
+      ],
+      "id": "41e2f1e8-0a2e-459d-9990-f8bdeee3fe69",
+      "name": "Telegram Trigger",
+      "webhookId": "09d25842-e081-4b54-9922-c8d13cb45026",
+      "credentials": {
+        "telegramApi": {
+          "id": "cFp6awbMphU0TUuI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -128,
+        -800
+      ],
+      "id": "27edec48-6aff-41cb-8727-ec0b90b5369f",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "qkfFj8098cxpFSQL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        -800
+      ],
+      "id": "a4291420-7310-480c-bdd5-2d6d2c34a919",
+      "name": "Get a file",
+      "webhookId": "d8fe5385-8143-454c-92f0-878f94c0b397",
+      "credentials": {
+        "telegramApi": {
+          "id": "cFp6awbMphU0TUuI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2571a334-143e-4806-803d-a8248ae3ea08",
+              "leftValue": "={{ $json.message.voice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        -704
+      ],
+      "id": "8b8becdf-e2c5-485f-af3d-5eaea5a983e7",
+      "name": "Check if it is a voice note"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a helpful assistant. Given the user's raw thought or idea below, only extract the following in 3 json items, Title, Summary, Tags, and use the tool - \"Log Thought into Sheet\" to add it to google sheets :\n1. A short, 5-8 word title.\n2. A 1-2 sentence summary.\n3. 3–5 tags that categorize the idea.\n\nText: {{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -688,
+        -144
+      ],
+      "id": "a62799ba-3586-47f7-9b14-2c38c992e0d1",
+      "name": "Message a model",
+      "executeOnce": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "qkfFj8098cxpFSQL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        -592
+      ],
+      "id": "2474404c-958b-477e-b49d-aa2f2d69a2a8",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e2dbbdf1-836b-444a-ba10-e20ded7ae229",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        -800
+      ],
+      "id": "cc6ec2a3-224c-4abb-b063-f196e964fa23",
+      "name": "Transcribed message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "19e47a2d-2b2d-4d88-942b-3f28a34a3370",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        -640
+      ],
+      "id": "33396446-0e4a-405b-bf8d-d10bd2cf7853",
+      "name": "Text message from Telegram"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "47cdc40a-fda8-447e-a6d0-264cff9f7bb2",
+              "leftValue": "={{ $items(\"Merge1\")[0].json.row_number_pre }}",
+              "rightValue": "={{ $items(\"Merge1\")[1].json.row_number_post }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        -144
+      ],
+      "id": "3acb92b8-15ee-4f12-b4b2-66076a022c8b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QXRVPKWVWlPN2weu5aPLXo37",
+          "mode": "list",
+          "cachedResultName": "Pikachu Thought logger ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QXRVPKWVWlPN2weu5aPLXo37/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QXRVPKWVWlPN2weu5aPLXo37/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -656,
+        -304
+      ],
+      "id": "71ce789b-9cf5-468f-9fda-ebaa45977122",
+      "name": "Pre - Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Vg1JuHBWSqCBfKFa",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QXRVPKWVWlPN2weu5aPLXo37",
+          "mode": "list",
+          "cachedResultName": "Pikachu Thought logger ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QXRVPKWVWlPN2weu5aPLXo37/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QXRVPKWVWlPN2weu5aPLXo37/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "b43ad1b5-e378-4cc5-90a2-aec2fac8e386",
+      "name": "Post - Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Vg1JuHBWSqCBfKFa",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the last item from the list of all rows\nconst lastItem = items[items.length - 1];\n\n// Get just the row_number from that last item's JSON data\nconst lastRowNumber = lastItem.json.row_number;\n\n// Return a new item that ONLY contains the row number\nreturn [{\n  json: {\n    row_number_pre: lastRowNumber\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -304
+      ],
+      "id": "1671ad6c-5550-4072-826f-fbe6dcde3daa",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the last item from the list of all rows\nconst lastItem = items[items.length - 1];\n\n// Get just the row_number from that last item's JSON data\nconst lastRowNumber = lastItem.json.row_number;\n\n// Return a new item that ONLY contains the row number\nreturn [{\n  json: {\n    row_number_post: lastRowNumber\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -16
+      ],
+      "id": "f03ffac7-2fd0-4fbf-ae42-d40ca70829e8",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "chatId": "00000000",
+        "text": "=Pika Pika, I logged {{ ($items(\"Merge1\")[1].json.row_number_post - $items(\"Merge1\")[0].json.row_number_pre) }} Thought(s)\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -240
+      ],
+      "id": "9e630732-b6fa-4851-97b1-574ed6a93e8f",
+      "name": "New Thought added",
+      "webhookId": "863b303e-ca6c-467d-8372-c015ae5a76f7",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "cFp6awbMphU0TUuI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "000000000",
+        "text": "Pikachu faced an error while logging your thought",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -48
+      ],
+      "id": "766528a7-a622-4463-a519-a5d60608c116",
+      "name": "Thought addition failed",
+      "webhookId": "95a52b97-eadd-407a-a2a2-3ad2241db163",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "cFp6awbMphU0TUuI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        64,
+        -144
+      ],
+      "id": "d665ab79-be55-4b1f-883b-68b74b07a369",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QXRVPKWVWlPN2weu5aPLXo37",
+          "mode": "list",
+          "cachedResultName": "Pikachu Thought logger ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QXRVPKWVWlPN2weu5aPLXo37/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QXRVPKWVWlPN2weu5aPLXo37/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ new Date().toLocaleString() }}",
+            "Title": "={{ $fromAI('Title', ``, 'string') }}",
+            "Summary": "={{ $fromAI('Summary', ``, 'string') }}",
+            "Transcript": "={{ $('Merge').item.json.text }}",
+            "Tags": "={{ $fromAI('Tags', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -544,
+        64
+      ],
+      "id": "60aa6360-4b3e-4a34-905d-11ec381c0943",
+      "name": "Log Thought into Sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Vg1JuHBWSqCBfKFa",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## I send a voice note to my bot",
+        "height": 96
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1008,
+        -624
+      ],
+      "typeVersion": 1,
+      "id": "5eb528b1-23e1-42f6-b194-5677c1cf8397",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "![Thought Logger Flow](https://i.ibb.co/Z6r5JjV4/Gemini-Generated-Image-735ftn735ftn735f-1.png)\n",
+        "height": 288,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "a369b433-fcc4-4755-9859-e419ca0eb0c5",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Voice note Transcribed",
+        "height": 80,
+        "width": 176,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "fe9a3ad8-976d-4bc0-a762-c8f0d9257bee",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## AI tags the note",
+        "height": 96,
+        "width": 150,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "4e6dd38f-1123-4dbc-a8fd-9ef8473d5a74",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## My AI Bot reporting",
+        "height": 80,
+        "width": 256,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        736,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "9940959f-362c-4636-919b-1461ec43e8a6",
+      "name": "Sticky Note5"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check if it is a voice note",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Pre - Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Transcribed message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if it is a voice note": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Text message from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Post - Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribed message": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text message from Telegram": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "New Thought added",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Thought addition failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre - Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post - Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Thought into Sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fbb73f525a8033fd4fb3bdda653674d6cbbf65912f4c4bcc2d12e76b48dae6f4"
+  }
+}
