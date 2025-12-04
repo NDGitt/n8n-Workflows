@@ -1,0 +1,886 @@
+{
+    "nodes": [
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-4o-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          112,
+          1328
+        ],
+        "id": "d9ec06c9-cc64-4352-a25e-5e0d0c0f6441",
+        "name": "OpenAI Chat Model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "DUMMY_OPENAI_CRED_001",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "addLabels",
+          "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+          "labelIds": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Label_Names_or_IDs', ``, 'string') }}"
+        },
+        "type": "n8n-nodes-base.gmailTool",
+        "typeVersion": 2.1,
+        "position": [
+          384,
+          1312
+        ],
+        "id": "e7e70a09-b3c9-454a-805a-a7c5d4a9c3fd",
+        "name": "Add label to message in Gmail",
+        "webhookId": "DUMMY-WEBHOOK-ID-001",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "DUMMY_GMAIL_CRED_001",
+            "name": "Gmail account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "filters": {}
+        },
+        "type": "n8n-nodes-base.gmailTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -336,
+          1104
+        ],
+        "id": "271e8ae0-59f6-41bb-8595-79271703bc98",
+        "name": "Gmail Trigger",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "DUMMY_GMAIL_CRED_001",
+            "name": "Gmail account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "label"
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -320,
+          464
+        ],
+        "id": "1bd089dc-32be-4393-9647-021a07afc337",
+        "name": "Get many labels",
+        "webhookId": "DUMMY-WEBHOOK-ID-002",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "DUMMY_GMAIL_CRED_001",
+            "name": "Gmail account 2"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "content": "## Executes whenever a new email comes",
+          "height": 128,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -416,
+          1312
+        ],
+        "typeVersion": 1,
+        "id": "8546d9dd-5c41-4d5d-830e-1ad0d89b7e80",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "## Make a prompt using text and labels from your GMAIL",
+          "height": 80,
+          "width": 368
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -144,
+          336
+        ],
+        "typeVersion": 1,
+        "id": "b3131f7e-10c8-48e4-92d1-bda4ac7274b6",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          -544,
+          464
+        ],
+        "id": "a77c22f6-65a2-4e81-9eb8-831b975a3bed",
+        "name": "When chat message received",
+        "webhookId": "DUMMY-WEBHOOK-ID-003",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get all labels from the \"Get many labels\" node\nconst labels = $items(\"Get many labels\").map(item => item.json);\n\n// Get the user's chat message from \"When chat message received\"\nconst chatItem = $items(\"When chat message received\")[0].json;\n\n// Use the actual property from the trigger: chatInput\nconst userText =\n  chatItem.chatInput ||          // <- this is the one your trigger uses\n  chatItem.text ||\n  chatItem.message ||\n  chatItem.query ||\n  \"\";\n\n// Build a single object to send to OpenAI\nreturn [\n  {\n    json: {\n      user_text: userText,\n      labels: labels,\n    },\n  },\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          464
+        ],
+        "id": "4b516ddf-4d71-4de5-b8cc-78b9bbec1a8b",
+        "name": "Code in JavaScript",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "=Here is the combined input JSON from n8n (user_text + labels):\n\n{{ JSON.stringify($json, null, 2) }}\n\nRead it and return ONLY the JSON object described in the system message.\n"
+              },
+              {
+                "role": "system",
+                "content": "=You are a prompt builder for an email triage agent that runs inside an n8n workflow.\n\nINPUT JSON (from n8n):\n- \"user_text\": free-form instructions written by the user about how they want to use their Gmail labels.\n- \"labels\": an array of Gmail label objects exactly as returned by the Gmail \"Get many labels\" node (each has at least \"id\" and \"name\").\n\nYOUR JOB:\nReturn a SINGLE JSON OBJECT with exactly these keys:\n\n{\n  \"prompt_block\": \"STRING\",\n  \"label_mapping\": [\n    {\n      \"gmail_label_id\": \"Label_...\",\n      \"gmail_label_name\": \"Original Gmail label name\",\n      \"category_name\": \"INTERNAL_CATEGORY_NAME\",\n      \"short_purpose\": \"One-line description of when this label is used\"\n    }\n  ]\n}\n\nRules:\n\n1. Use \"user_text\" to understand:\n   - Which labels the user cares about.\n   - What each label should be used for (include vs exclude situations).\n\n2. Use \"labels\" to:\n   - Match by Gmail label name.\n   - Pull the correct Gmail label IDs.\n   - Only include labels that make sense given \"user_text\".\n\n3. The \"prompt_block\" STRING must be a self-contained instructions block that can be pasted inside a larger system prompt, following this structure:\n\n--------------------\nCATEGORIES & LABELS\n--------------------\n\n1. CATEGORY_NAME (Gmail label: \"Gmail Label Name\")\n   - Purpose: One line explaining what it is for.\n   - Apply when:\n     - Bullet rule\n     - Bullet rule\n   - Do NOT apply when:\n     - Bullet rule\n\n[Repeat for each category you define]\n\n---------------------------------\nGMAIL LABEL IDS – USE THESE ONLY\n---------------------------------\n\n- CATEGORY_NAME → \"GmailLabelId\"\n- ANOTHER_CATEGORY → \"AnotherLabelId\"\n\n4. Do NOT mention JSON, tools, or n8n inside \"prompt_block\". It should read like natural instructions.\n\n5. CRITICAL:\n   - Respond with a VALID JSON OBJECT only.\n   - No prose, no explanation, no backticks.\n   - Do NOT add any top-level keys besides \"prompt_block\" and \"label_mapping\".\n"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2,
+        "position": [
+          144,
+          464
+        ],
+        "id": "abbf6364-3f68-4b2f-b70a-4f30a294e358",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "DUMMY_OPENAI_CRED_001",
+            "name": "OpenAi account"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "content": "# ▶️ Step 2 — Describe How You Want Your Labels to Work\n\nOnce your Gmail labels exist, use the **chatbox panel** (left side of n8n) to tell the AI:\n\n- What each label means  \n- When the label should apply  \n- When it should NOT apply  \n- Any special rules or exceptions\n\nExamples you can type:\n\n> “I want a marketing label, a jobs label, and a meetings label.  \n> Marketing is for promos.  \n> Jobs is for application updates.  \n> Meetings is for invites or scheduling changes.”\n\nWhen you send your message:\n\n- `When chat message received` captures your text  \n- `Get many labels` fetches all Gmail labels + real label IDs  \n- `Code` merges your instructions + label data into one JSON  \n- The **Message a model** node generates your custom prompt and mapping\n\nThis prepares the data needed for Step 3.\n\n",
+          "height": 752,
+          "width": 3872,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1584,
+          128
+        ],
+        "typeVersion": 1,
+        "id": "79b3d07e-5b20-4c28-a81c-53b3e30dacae",
+        "name": "Sticky Note4"
+      },
+      {
+        "parameters": {
+          "content": "# Main Wrokflow",
+          "height": 848,
+          "width": 3078,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -816,
+          912
+        ],
+        "typeVersion": 1,
+        "id": "42901320-8684-4193-accb-2f33deaa8b0e",
+        "name": "Sticky Note5"
+      },
+      {
+        "parameters": {
+          "content": "# 🏷️ Step 1 — Create Your Gmail Labels\n\nBefore this flow runs, you must **create your labels directly in Gmail**.\n\n1. 📌 Open Gmail → left sidebar → **Create new label**\n2. ➕ Add all the labels you want the AI to use (e.g., *1. Jobs*, *2. To Respond*, *3. Meeting Update*)\n3. 🔄 Return here once your labels are created\n\n⚠️ This workflow **does not create labels** — it only **reads the labels you already made** and uses them to build your personalized prompt + label-mapping.\n",
+          "height": 240,
+          "width": 3888
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1584,
+          -128
+        ],
+        "typeVersion": 1,
+        "id": "6156ca63-bbed-4923-8a11-98111dd2e0a4",
+        "name": "Sticky Note6"
+      },
+      {
+        "parameters": {
+          "content": "💬 Type your label rules and descriptions here.\n",
+          "height": 80
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -608,
+          368
+        ],
+        "typeVersion": 1,
+        "id": "b351c07b-c238-469a-a692-3b015d294cb1",
+        "name": "Sticky Note3"
+      },
+      {
+        "parameters": {
+          "content": "# 🧩 Step 3 — Plug Your Custom Rules Into the Main Workflow\n\nAfter you run Step 2 – Initial One-time Setup, do the following:\n\n1. Open the latest execution of the “Step 2 Output” node.\n\nIt contains two important fields:\n\nprompt_block → your full generated CATEGORIES & LABELS section\n\nlabel_mapping → Gmail Label IDs mapped to categories\n\n2. Copy the entire prompt_block value.\n\nThis is the full block of text that replaces the old categories.\n\n3. Open the Main Workflow → “Main Email Agent” node.\n\nInside the prompt:\n\nScroll down until you find the section starting with:\n\n\n### CATEGORIES & LABELS\n\n\nSelect everything from that header\nuntil the next header:\n\n\n### TOOLS YOU CAN USE\n\n\n4. Replace that entire block with your new prompt_block.\n\nThis is the only place you edit.\nYour Main Agent now uses your categories, your rules, and your Gmail Label IDs.\n\n5. Paste label_mapping into a sticky note (optional).\n\nThis helps you later remember which Gmail labels map to which internal categories.",
+          "height": 896,
+          "width": 736
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1584,
+          896
+        ],
+        "typeVersion": 1,
+        "id": "bb5195b1-71ad-435e-a203-3e162cfbe31b",
+        "name": "Sticky Note7"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=={{ ` You are an email triage assistant running inside an n8n workflow.\n\nYou receive ONE JSON object from n8n which is an ARRAY of Gmail messages.\nMost of the time this array contains ONLY ONE email, sometimes a few.\n\nHere is the array of emails you have to process:\n${JSON.stringify($json, null, 2)}\n\n---------------------------\nHIGH-LEVEL BEHAVIOR (READ!)\n---------------------------\n\nEach time this workflow runs, you may receive 1 or more emails.\n\nDefault behavior for EACH RUN:\n- It is ALWAYS OK to:\n  - Add NO labels.\n- When in doubt, DO NOTHING for that email.\n\nFor a typical single-email run:\n- Each email should get AT MOST ONE category label.\n- Most emails should get:\n    - EITHER one structural label (JOB_APPLICATION_UPDATE, etc.)\n    - OR no label at all.\n\n--------------------\nYOUR JOB\n--------------------\n\nFor EACH email:\n\n1) Choose EXACTLY ONE category from the list below.\n \n2) Add ONLY that category’s label using AddLabelToMessage.\n\nIf an email does not clearly fit any category:\n→ Apply no label.\n\n--------------------\nCATEGORIES & LABELS\n--------------------\n\nChoose EXACTLY ONE of the following categories for each email:\n\n1. JOB_APPLICATION_UPDATE\n   - Emails about applications you've already submitted\n   - Application status updates (received, under review, rejected, interview invitations)\n   - Follow-ups from recruiters about your specific application\n   - Portal login credentials for applications you started\n   - \"Thank you for applying\", \"Application received\", \"Next steps in your application\"\n   - Rejection notifications or \"we've decided to move forward with other candidates\"\n   - Interview scheduling for positions you applied to\n   - Do NOT include: general job postings, job recommendations, or cold recruiter outreach\n\n2. NEW_JOB_OPPORTUNITIES\n   - Job postings and opportunities you haven't applied to yet\n   - Recruiter cold outreach about open positions\n   - \"We found a role that matches your profile\"\n   - Job recommendations from platforms (non-LinkedIn)\n   - Headhunter emails introducing new opportunities\n   - \"Would you be interested in this position?\"\n   - Career opportunity emails from recruiters you haven't engaged with\n   - Do NOT include: LinkedIn job alerts, application updates\n\n3. TO_RESPOND\n   - Use this ONLY when the sender clearly expects a reply from you AND it requires YOUR input/action.\n\n   The email MUST meet ALL of these criteria:\n   a) It's from a real person (not automated/no-reply addresses)\n   b) It contains at least one of:\n      - A direct question requiring YOUR answer (with a \"?\")\n      - An explicit request for YOUR action/decision (\"Can you...\", \"Please confirm...\", \"Let me know...\")\n      - A clear follow-up where they're waiting on YOU specifically\n   \nThe email with any of these criteria should be excluded:\n      - Automated messages (no-reply@, noreply@, do-not-reply@)\n      - Mass emails/newsletters (even if personalized)\n      - FYI/informational updates\n      - Thank you messages or holiday greetings\n      - Meeting invites that just need calendar acceptance\n      - Application status updates\n      - Event confirmations or reminders\n\n   CRITICAL: When in doubt, DO NOT choose TO_RESPOND.\n\n4. MEETING_UPDATE\n   - Meeting invitations (new meetings being proposed)\n   - Calendar invites and meeting requests\n   - Meeting time changes, cancellations, or rescheduling\n   - \"Let's schedule a call\", \"Are you available for a meeting?\"\n   - Zoom/Google Meet/Teams links\n   - Meeting confirmations and reminders\n   - Office hours booking confirmations\n   - \"Looking forward to our meeting on...\"\n   - Do NOT include: event invitations (conferences, webinars, social events)\n\n5. EVENT_INVITES\n   - Invitations to conferences, workshops, webinars, seminars\n   - Social event invitations (networking events, parties, gatherings)\n   - Community event announcements\n   - Registration links for events\n   - Event announcements with RSVP requests\n   - Speaker series invitations\n   - Do NOT include: one-on-one meeting invites\n\n6. EVENT_UPDATES\n   - Updates about events you're registered for or attending\n   - Event reminders\n   - Logistics changes (room/time updates)\n   - Post-event follow-ups (recordings, slides, thank you emails)\n   - Check-in confirmations\n   - Event cancellations/postponements\n   - Do NOT include: initial event invitations\n\n7. NEWSLETTERS\n   - Scheduled newsletters you're subscribed to\n   - Content digests, curated articles, industry updates\n   - Weekly/monthly roundups\n   - Substack/blog notifications\n   - Alumni newsletters\n   - Organizational updates\n   - Do NOT include: one-off promotional emails or transactional emails\n\n8. COLD_EMAIL\n   - Unsolicited sales outreach\n   - Cold pitches for services/products\n   - “I came across your profile and…”\n   - Vendor outreach you didn't request\n   - SDR/BDR prospecting\n   - Do NOT include: newsletters you subscribed to, legitimate job opportunities, or marketing from brands you use\n\n9. MARKETING\n   - Promotional emails from brands you use\n   - Product announcements from services you have accounts with\n   - Discounts, sales, offers\n   - Feature updates\n   - E-commerce recommendations\n   - Promotional reminders from apps you use\n   - Do NOT include: transactional emails (receipts, password resets)\n\nIf an email doesn't fit any category clearly, apply NO label.\n\n\n---------------------------------\nGMAIL LABEL IDS – USE THESE ONLY\n---------------------------------\n\n- JOB_APPLICATION_UPDATE → \"Label_DUMMY_001\"\n- NEW_JOB_OPPORTUNITIES → \"Label_DUMMY_002\"\n- TO_RESPOND            → \"Label_DUMMY_003\"\n- MEETING_UPDATE        → \"Label_DUMMY_004\"\n- EVENT_INVITES         → \"Label_DUMMY_005\"\n- EVENT_UPDATES         → \"Label_DUMMY_006\"\n- NEWSLETTERS           → \"Label_DUMMY_007\"\n- COLD_EMAIL            → \"Label_DUMMY_008\"\n- MARKETING             → \"Label_DUMMY_009\"\n\n--------------------\nTOOLS YOU CAN USE\n--------------------\n\n1. AddLabelToMessage\n   - Use EXACTLY ONCE per email (or not at all).\n   - Inputs:\n       Message_ID: email.id\n       Label_Names_or_IDs: ONE of the label IDs above\n\n--------------------\nHOW TO RESPOND\n--------------------\n\nFor EACH email:\n\n1. Extract its message id which is - \\{{ $json.id \\}}\n2. Choose EXACTLY ONE category.\n3. Call AddLabelToMessage ONCE with the correct label ID.\n\nIf no category fits:\n→ Do NOTHING.\n\n\n\nIMPORTANT — FINAL OUTPUT FORMAT (STRICT REQUIREMENT)\n\nThe final output of this agent MUST always be a JSON array containing exactly one tool call.\n\nThe correct format is:\n\n[\n{\n\"tool\": \"AddLabelToMessage\",\n\"inputs\": {\n\"Message_ID\": \"<the id>\",\n\"Label_Names_or_IDs\": \"<the label>\"\n}\n}\n]\n\nRules:\n\nYou MUST always output this array when adding a label.\n\nDo NOT output text before or after the array.\n\nDo NOT wrap it inside code fences.\n\nDo NOT output an empty message.\n\nDo NOT output null or {}.\n\nDo NOT omit the tool call.\n\nIf no label should be added, output nothing at all.\n\n\nYour output must be ONLY tool calls. No explanations.\n` }}\n",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.2,
+        "position": [
+          160,
+          1104
+        ],
+        "id": "6b5e4708-5fbb-466f-ad0d-7b6bc8f387a8",
+        "name": "Main Email Agent",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b8a45adb-b0ac-4f01-aa12-f23473b94211",
+                "name": "prompt_block",
+                "value": "={{ JSON.parse($json.output[0].content[0].text).prompt_block }}\n",
+                "type": "string"
+              },
+              {
+                "id": "0a7bb7aa-62d9-4bde-9e97-ec3d187acff5",
+                "name": "label_mapping",
+                "value": "={{ JSON.stringify(JSON.parse($json.output[0].content[0].text).label_mapping) }}\n",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          464,
+          464
+        ],
+        "id": "ccd6f0ef-5021-4c2e-96f9-51830418f5e9",
+        "name": "Step 2 Output (Refer to Step 3 Instructions)",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "source": "googleSheets",
+          "documentId": {
+            "__rl": true,
+            "value": "DUMMY_SPREADSHEET_ID_12345",
+            "mode": "list",
+            "cachedResultName": "Evals for Email",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/Add your sheet id here"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/Add your sheet id here"
+          },
+          "outputs": {
+            "values": [
+              {
+                "outputName": "actual_label",
+                "outputValue": "={{ $json.predicted_label_ids}}"
+              },
+              {
+                "outputName": "actual_has_draft",
+                "outputValue": "={{ $json.predicted_has_draft}}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.evaluation",
+        "typeVersion": 4.8,
+        "position": [
+          1328,
+          1904
+        ],
+        "id": "6357f749-9ffd-474d-bf0c-4b336c3b0c47",
+        "name": "Evaluation1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "DUMMY_GSHEETS_CRED_001",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "source": "googleSheets",
+          "documentId": {
+            "__rl": true,
+            "value": "DUMMY_SPREADSHEET_ID_12345",
+            "mode": "list",
+            "cachedResultName": "Evals for Email",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/DUMMY_SPREADSHEET_ID_12345/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/DUMMY_SPREADSHEET_ID_12345/edit#gid=0"
+          },
+          "limitRows": true,
+          "maxRows": 1
+        },
+        "type": "n8n-nodes-base.evaluationTrigger",
+        "typeVersion": 4.7,
+        "position": [
+          -208,
+          1920
+        ],
+        "id": "36296569-ca0c-479b-9f37-ca0b3a096415",
+        "name": "When fetching a dataset row",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "DUMMY_GSHEETS_CRED_001",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "89f3fdee-b654-4ff4-891b-91eee96d86e7",
+                "name": "email_id",
+                "value": "={{ $json.email_id }}",
+                "type": "string"
+              },
+              {
+                "id": "69f9b1c7-3606-47f7-8aac-4412855979d1",
+                "name": "predicted_label_ids",
+                "value": "={{ ($json.inputs?.Label_Names_or_IDs || '').trim() }}",
+                "type": "string"
+              },
+              {
+                "id": "6e2cfe04-d43d-4027-9af1-2046c1e297c7",
+                "name": "predicted_has_draft",
+                "value": "={{ !!(($json.inputs?.Label_Names_or_IDs || '').trim().includes('Label_DUMMY_003')) }}",
+                "type": "boolean"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1104,
+          1904
+        ],
+        "id": "bda2a499-5cff-4bda-9e9a-c982109dd47d",
+        "name": "Eval Output"
+      },
+      {
+        "parameters": {
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          208,
+          1920
+        ],
+        "id": "c366111d-d84b-4d85-9b34-b3e13e3e304a",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "advanced": true,
+          "mergeByFields": {
+            "values": [
+              {
+                "field1": "inputs.Message_ID",
+                "field2": "email_id"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          864,
+          1904
+        ],
+        "id": "702a142f-0051-40dd-ad90-dd3f6fb5bae1",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "content": "# 📊 Step 4 — Evaluations (Evals)\n\nUse this step to check whether your email agent is choosing the correct label and draft behavior.\n\n1. Dataset Format (Google Sheet)\n\nEach row must include:\n\nemail_id → the Gmail message ID\nemail_json → the full email JSON as a string\nexpected_label_id → the label you expect the agent to apply\nexpected_has_draft → TRUE or FALSE\n\nExample:\n\nemail_id: 19ab1234abcd999\nemail_json: {\"id\":\"19ab...\",\"snippet\":\"Hey, are you free...\"}\nexpected_label_id: Label_2\nexpected_has_draft: TRUE\n\n2. What the Eval Workflow Does\n\n• “When fetching a dataset row” loads the next row from the sheet\n• “Edit Fields” extracts clean variables\n• “Main Email Agent” runs on the stored email JSON\n• “Code → Set → Merge” combines:\n\npredicted label\n\npredicted draft status\n\nexpected label\n\nexpected draft status\n• “Evaluation” writes the results back to the sheet\n\n3. How to Interpret Results\n\nThe sheet will now contain four key columns:\n\nexpected_label_id\nactual_label\nexpected_has_draft\nactual_has_draft\n\nYou want:\n\nexpected_label_id == actual_label\nexpected_has_draft == actual_has_draft\n\nIf not, your rules or prompt need refinement.\n\n4. Adding More Tests\n\nYou can add new rows to the sheet at any time.\nThe eval workflow will keep fetching them one by one.",
+          "height": 1184,
+          "width": 736,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1584,
+          1808
+        ],
+        "typeVersion": 1,
+        "id": "a8bffe49-fff8-4dbf-b9b5-6735d4f9492d",
+        "name": "Sticky Note8"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-4o-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1168,
+          1296
+        ],
+        "id": "d79d9c6c-5660-49df-8323-15acb0e6af51",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "DUMMY_OPENAI_CRED_001",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "draft",
+          "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+          "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+          "options": {
+            "threadId": "={{ $('Gmail Trigger').item.json.threadId }}"
+          }
+        },
+        "type": "n8n-nodes-base.gmailTool",
+        "typeVersion": 2.1,
+        "position": [
+          1424,
+          1312
+        ],
+        "id": "4cf25951-3252-4f67-9521-171399aee591",
+        "name": "Create a draft in Gmail1",
+        "webhookId": "DUMMY-WEBHOOK-ID-004",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "DUMMY_GMAIL_CRED_001",
+            "name": "Gmail account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ `\nYou are an email reply-writing assistant running inside an n8n workflow.\n\nYou receive ONE JSON object from n8n that represents a Gmail email (and possibly its full thread).\nThis object may include:\n- id\n- threadId\n- from\n- to\n- subject\n- snippet\n- payload\n- internalDate\n- the full thread of messages (if available)\n\nHere is the raw JSON you have to work with:\n${JSON.stringify($json, null, 2)}\nSubject:\"${$('Gmail Trigger').item.json.Subject}\"\nFrom:\"${$('Gmail Trigger').item.json.From}\"\nEmail Snippet: \"${$('Gmail Trigger').item.json.snippet}\"\n\nThe workflow only sends you emails that have already been classified as TO_RESPOND.\nThat means:\n- The sender is a real person\n- They are expecting an answer or decision from me\n\n------------------------------------------------\nYOUR JOB — READ CAREFULLY\n------------------------------------------------\n\nFor EACH email you receive:\n\n1. Identify the **latest human-written message** in the thread.\n   The correct threadId for replying is:\n   \"${$('Gmail Trigger').item.json.threadId}\"\n\n2. Understand exactly what the sender is asking:\n   - Questions requiring my input\n   - Decisions they need from me\n   - Scheduling, confirmation, or information requests\n\n3. Draft a clean, professional reply that:\n   - Directly answers ALL questions\n   - Is short and to the point\n   - Is written in clear, simple English\n   - Is polite but not overly enthusiastic\n   - Sounds like a normal human email\n\n------------------------------------------------\nREPLY FORMAT RULES — STRICT\n------------------------------------------------\n\nYour reply **must** follow this structure:\n\n1. **Greeting** (use their first name if available, otherwise a simple “Hi there,”)\n2. **One short paragraph** answering their question(s) directly\n3. **Optional next step or clarification**, only if necessary\n4. **Short, clean sign-off** (“Best,” or “Thanks,”)\n\nExample tone and structure:\n\nHi Sarah,\nThanks for reaching out. Yes, I’m available on Thursday afternoon and can make 3pm work. If you’d prefer another time just let me know.\nBest,\nNikhil\n\nNO:\n- Overly long replies\n- Corporate fluff\n- Apologies unless the email clearly requires it\n- Repeating the entire thread\n- Quoting previous messages unless necessary\n\n------------------------------------------------\nTOOL YOU MUST USE\n------------------------------------------------\n\nYou have ONE tool: **CreateDraftInGmail**\n\nCall it EXACTLY ONCE with:\n- threadId: already supplied by workflow (DO NOT invent)\n- body: the reply you wrote (plain text, no markup)\n- subject: only if needed; otherwise reuse “Re: <original subject>”\n\n------------------------------------------------\nHOW TO RESPOND\n------------------------------------------------\n\nYour output must be ONLY a tool call.\nNo explanations, no prose outside the tool.\n\nIf the message clearly does not require a reply (pure “thanks”, FYI, etc.), skip the tool call entirely.\n\n` }}\n",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          1168,
+          1088
+        ],
+        "id": "aab03f21-5d28-46ae-9629-000d8b91f048",
+        "name": "Email Draft Agent"
+      },
+      {
+        "parameters": {
+          "content": "# Evals",
+          "height": 304,
+          "width": 3072,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -784,
+          1824
+        ],
+        "typeVersion": 1,
+        "id": "9646ae3f-bda2-4c00-991a-f0f49556d65b",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "content": "## AI Agent 1 adds appropriate labels to your mail",
+          "height": 80,
+          "width": 368,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          80,
+          976
+        ],
+        "typeVersion": 1,
+        "id": "3bfc0fa6-42e6-4fa4-b42b-d7004382d505",
+        "name": "Sticky Note10"
+      },
+      {
+        "parameters": {
+          "content": "## If we are supposed to reply, another AI Agent writes a draft",
+          "height": 128,
+          "width": 304,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          976,
+          1472
+        ],
+        "typeVersion": 1,
+        "id": "4e56596f-044a-4070-9ffa-abb7764cd136",
+        "name": "Sticky Note11"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "ca4715b8-644d-4cff-b1b9-25f28749c641",
+                "leftValue": "={{ $json.inputs.Label_Names_or_IDs }}",
+                "rightValue": "Label_DUMMY_003",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          896,
+          1104
+        ],
+        "id": "8aa0ebf8-ba97-4dff-b7fc-f486731c8743",
+        "name": "Is a response expected?"
+      },
+      {
+        "parameters": {
+          "jsCode": "// The agent output is inside $json.output, but wrapped in ```json ... ```\nlet raw = $json.output || \"\";\n\n// Remove fences like ```json ... ```\nraw = raw.replace(/```json/gi, \"\").replace(/```/g, \"\").trim();\n\n// Parse the JSON inside\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  // Fall back to an empty object if parsing fails\n  parsed = { parseError: true, raw };\n}\n\n// If the parsed value is an array (which it is for tool calls),\n// take the first element so `json` is a plain object\nconst itemJson = Array.isArray(parsed) ? (parsed[0] || {}) : parsed;\n\n// ✅ Return in n8n's expected format\nreturn [\n  {\n    json: itemJson,\n  },\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          560,
+          1104
+        ],
+        "id": "65f939e5-9193-4e60-8944-1d891eaf0122",
+        "name": "Small modifications to the JSON"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "5206df6a-3c5b-45b7-ba63-fc37f06faf2a",
+                "leftValue": "={{ $json.labels[2].id }}",
+                "rightValue": "=Label_DUMMY_007",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "96a551d6-03db-4f79-8c2e-65d6ca15476a",
+                "leftValue": "={{ $json.labels[2].id }}",
+                "rightValue": "Label_DUMMY_010",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -112,
+          1104
+        ],
+        "id": "2c3d600f-911b-48a9-bf91-d8ee467326ef",
+        "name": "Labelled by an existing GMAIL logic?",
+        "notesInFlow": false,
+        "notes": "For gmail to work with labels, label IDs work well.\nSo i have manually captured the label ids I want to exclude from the process"
+      }
+    ],
+    "connections": {
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Main Email Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add label to message in Gmail": {
+        "ai_tool": [
+          [
+            {
+              "node": "Main Email Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gmail Trigger": {
+        "main": [
+          [
+            {
+              "node": "Labelled by an existing GMAIL logic?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many labels": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "Get many labels",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Step 2 Output (Refer to Step 3 Instructions)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Main Email Agent": {
+        "main": [
+          [
+            {
+              "node": "Small modifications to the JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When fetching a dataset row": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Eval Output": {
+        "main": [
+          [
+            {
+              "node": "Evaluation1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Eval Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Email Draft Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a draft in Gmail1": {
+        "ai_tool": [
+          [
+            {
+              "node": "Email Draft Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is a response expected?": {
+        "main": [
+          [
+            {
+              "node": "Email Draft Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Small modifications to the JSON": {
+        "main": [
+          [
+            {
+              "node": "Is a response expected?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Labelled by an existing GMAIL logic?": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Main Email Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "DUMMY-N8N-INSTANCE-ID-12345"
+    }
+  }

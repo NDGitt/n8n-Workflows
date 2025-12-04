@@ -24,6 +24,16 @@ This repository contains various n8n workflows that you can import and use in yo
 
 ## 📁 Workflows
 
+### [AI Email Manager](./workflows/AI-Email-Manager/)
+Intelligent Gmail automation that uses AI to automatically categorize emails with custom labels and draft replies for emails requiring responses.
+
+**Features:**
+- AI-powered email categorization with customizable rules
+- Automatic Gmail label application
+- Smart draft generation for emails requiring replies
+- Built-in evaluation system for testing accuracy
+- Filters out emails already labeled by existing Gmail rules
+
 ### [AI Thought Logger](./workflows/ai-thought-logger/)
 Automatically capture, transcribe, and organize your thoughts from Telegram (voice notes or text) into Google Sheets with AI-powered tagging and summarization.
 
