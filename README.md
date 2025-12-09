@@ -27,7 +27,7 @@ This repository contains various n8n workflows that you can import and use in yo
 ### [AI Email Manager](./workflows/AI-Email-Manager/)
 Intelligent Gmail automation that uses AI to automatically categorize emails with custom labels and draft replies for emails requiring responses.
 
-[![Watch the video](https://img.youtube.com/vi/b3oLLiQmjsY/hqdefault.jpg)](https://youtu.be/b3oLLiQmjsY)
+[![Watch the video](<img width="2752" height="1536" alt="Gemini_Generated_Image_hs5wh3hs5wh3hs5w" src="https://github.com/user-attachments/assets/cf5f2d4f-df88-4d3c-ba51-2873c3f76b36"/>)](https://youtu.be/b3oLLiQmjsY)
 
 **Features:**
 - AI-powered email categorization with customizable rules
